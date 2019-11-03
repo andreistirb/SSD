@@ -5,7 +5,7 @@ import logging
 import numpy as np
 import os
 import pathlib
-from PIL import Image
+from PIL import Image,ImageFile
 
 import torch
 from torch.utils.data import Dataset
@@ -13,6 +13,8 @@ from torch.utils.data import Dataset
 from ssd.structures.container import Container
 
 class MammalDataset(Dataset):
+
+    class_names = ('__background__','mammal')
 
     def __init__(self, data_dir, ann_file, transform=None, target_transform=None):
         self.root_path = data_dir
@@ -50,6 +52,10 @@ class MammalDataset(Dataset):
         for annotation in annotations:
             self.annotations[annotation["image_id"]].append((annotation["bbox"], self.category_to_index[annotation["category_id"]]))
 
+    def get_annotation(self, index):
+        image_id = self.imgs_idx[index]
+        return image_id, self._get_annotation(index)
+
     def __getitem__(self, index):
         
         image = self._read_image(index)
@@ -57,7 +63,7 @@ class MammalDataset(Dataset):
         
         cv_image = image.copy()      
 
-        boxes, labels = self._get_annotation(index)
+        boxes, labels, is_difficult = self._get_annotation(index)
         
         # For display purpose
         for box in boxes:
@@ -119,10 +125,24 @@ class MammalDataset(Dataset):
         #image = cv2.imread(str(image_path))
 
         # using PIL
-        image = Image.open(image_path).convert("RGB")
+        #ImageFile.LOAD_TRUNCATED_IMAGES = True
+        try:
+                image = Image.open(image_path).convert("RGB")
+        except Exception as e:
+                ImageFile.LOAD_TRUNCATED_IMAGES = True
+                image = Image.open(image_path).convert("RGB")
+                print(image_path + " bad file ----- please check it")
+                ImageFile.LOAD_TRUNCATED_IMAGES = False
         image = np.array(image)
 
         return image
+
+    def get_img_info(self, index):
+        image_id = self.imgs_idx[index]
+        image_path = self.root_path + "/" + self.images[image_id]
+        image = cv2.imread(str(image_path))
+        height, width, _ = image.shape
+        return {"height": height, "width": width}
 
     def _get_image_id(self, index):
         image_id = self.imgs_idx[index]
@@ -152,5 +172,8 @@ class MammalDataset(Dataset):
 
         boxes = np.array(boxes, dtype=np.float32)
         labels = np.array(labels)
+	
+        # dummy np array
+        is_difficult = np.zeros(boxes.shape)
 
-        return boxes, labels
+        return boxes, labels, is_difficult

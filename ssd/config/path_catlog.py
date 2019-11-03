@@ -92,10 +92,10 @@ class DatasetCatalog:
             attrs = DatasetCatalog.DATASETS[name]
 
             # linux solution
-            # data_dir = os.path.join(mammal_root, attrs["data_dir"])
+            data_dir = os.path.join(mammal_root, attrs["data_dir"])
 
             # windows solution
-            data_dir = "D:/Datasets/iNaturalist2017/"
+            # data_dir = "D:/Datasets/iNaturalist2017/"
 
             args = dict(
                 data_dir=data_dir,
