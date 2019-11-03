@@ -52,6 +52,14 @@ class DatasetCatalog:
             "data_dir": "val2014",
             "ann_file": "annotations/instances_val2014.json"
         },
+        'mammal_train': {
+            "data_dir": "iNaturalist2017",
+            "ann_file": "mammal_train_2017_boxes.json"
+        },
+        'mammal_val': {
+            "data_dir": "iNaturalist2017",
+            "ann_file": "mammal_val_2017_boxes.json"
+        }
     }
 
     @staticmethod
@@ -78,5 +86,21 @@ class DatasetCatalog:
                 ann_file=os.path.join(coco_root, attrs["ann_file"]),
             )
             return dict(factory="COCODataset", args=args)
+        elif "mammal" in name:
+            mammal_root = DatasetCatalog.DATA_DIR
+
+            attrs = DatasetCatalog.DATASETS[name]
+
+            # linux solution
+            # data_dir = os.path.join(mammal_root, attrs["data_dir"])
+
+            # windows solution
+            data_dir = "D:/Datasets/iNaturalist2017/"
+
+            args = dict(
+                data_dir=data_dir,
+                ann_file=os.path.join(data_dir, attrs["ann_file"]))
+            return dict(factory="MammalDataset", args=args)
+
 
         raise RuntimeError("Dataset not available: {}".format(name))
